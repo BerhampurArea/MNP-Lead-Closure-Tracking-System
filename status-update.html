@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNP Status Update - Odisha </title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { background: #f0f2f5; padding: 16px; color: #1a1a1a; }
+  .container { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden; }
+  .header { background: linear-gradient(135deg, #1a5599, #0f3460); color: #fff; padding: 20px; text-align: center; }
+  .header h1 { font-size: 18px; margin-bottom: 4px; }
+  .header p { font-size: 12px; opacity: 0.85; }
+  .form-body { padding: 20px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+  label .req { color: #e63946; }
+  input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-size: 14px; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #1a5599; }
+  textarea { resize: vertical; min-height: 50px; }
+  .submit-btn { width: 100%; padding: 13px; background: #0f3460; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .submit-btn:disabled { background: #9aa5b1; }
+  .status-msg { text-align: center; padding: 10px; margin-top: 12px; border-radius: 8px; font-size: 13px; display: none; }
+  .status-msg.success { background: #d4edda; color: #155724; display: block; }
+  .status-msg.error { background: #f8d7da; color: #721c24; display: block; }
+  .hint { font-size: 11px; color: #777; margin-top: 4px; }
+  .orn-field { display: none; }
+  .orn-field.show { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>MNP Status Update</h1>
+    <p> Odisha | Reliance Jio</p>
+  </div>
+  <div class="form-body">
+    <form id="statusForm">
+      <div class="field">
+        <label>Lead ID <span class="req">*</span></label>
+        <input type="text" id="leadId" required placeholder="e.g. L0012">
+        <div class="hint">Lead ID was generated when the JCA submitted the lead</div>
+      </div>
+
+      <div class="field">
+        <label>Your PRM ID (Person who visited) <span class="req">*</span></label>
+        <input type="text" id="closingPrmId" required placeholder="e.g. PRM98765">
+      </div>
+
+      <div class="field">
+        <label>MNP Status <span class="req">*</span></label>
+        <select id="mnpStatus" required>
+          <option value="">-- Select --</option>
+          <option value="Visited">Visited (in progress)</option>
+          <option value="MNP Done">MNP Done</option>
+          <option value="MNP Not Done">MNP Not Done</option>
+        </select>
+      </div>
+
+      <div class="field orn-field" id="ornField">
+        <label>ORN No <span class="req">*</span></label>
+        <input type="text" id="ornNo" placeholder="Enter ORN Number">
+      </div>
+
+      <div class="field">
+        <label>Remarks</label>
+        <textarea id="remarks" placeholder="Any notes (e.g. reason if not done, follow-up date)"></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Submit Update</button>
+      <div class="status-msg" id="statusMsg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCWm_TUNELUiZSo9rZBjngWcTX7ODamNYV8-a_AjsNAhB2Om79HKLC2KjxNXfsZRpTvQ/exec";
+
+const mnpStatus = document.getElementById('mnpStatus');
+const ornField = document.getElementById('ornField');
+const ornNo = document.getElementById('ornNo');
+
+mnpStatus.addEventListener('change', () => {
+  if (mnpStatus.value === 'MNP Done') {
+    ornField.classList.add('show');
+    ornNo.required = true;
+  } else {
+    ornField.classList.remove('show');
+    ornNo.required = false;
+  }
+});
+
+document.getElementById('statusForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById('submitBtn');
+  const statusMsg = document.getElementById('statusMsg');
+
+  const payload = {
+    type: "status_update",
+    leadId: document.getElementById('leadId').value.trim(),
+    closingPrmId: document.getElementById('closingPrmId').value.trim(),
+    mnpStatus: mnpStatus.value,
+    ornNo: ornNo.value.trim(),
+    remarks: document.getElementById('remarks').value.trim()
+  };
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Submitting...";
+  statusMsg.className = 'status-msg';
+  statusMsg.style.display = 'none';
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    statusMsg.className = 'status-msg success';
+    statusMsg.textContent = 'Status updated successfully for ' + payload.leadId + '.';
+    document.getElementById('statusForm').reset();
+    ornField.classList.remove('show');
+  } catch (err) {
+    statusMsg.className = 'status-msg error';
+    statusMsg.textContent = 'Submission failed. Please check your connection and try again.';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit Update";
+  }
+});
+</script>
+</body>
+</html>
