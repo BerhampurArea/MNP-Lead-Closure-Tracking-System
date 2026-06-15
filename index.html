@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MNP Lead Capture - Odisha</title>
+<title>MNP Lead Capture - JCA Odisha</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
   body { background: #f0f2f5; padding: 16px; color: #1a1a1a; }
@@ -35,7 +35,7 @@
 <div class="container">
   <div class="header">
     <h1>MNP Lead Capture Form</h1>
-    <p>Berhampur Area | Reliance Jio</p>
+    <p>JCA ODISHA | Reliance Jio</p>
   </div>
   <div class="form-body">
     <form id="leadForm">
@@ -52,6 +52,7 @@
       <div class="field">
         <label>Customer Mobile Number <span class="req">*</span></label>
         <input type="tel" id="mobile" required maxlength="10" pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number">
+        <div class="hint" id="mobileHint"></div>
       </div>
 
       <div class="field">
@@ -96,7 +97,36 @@ const PIN_MAP = [{"jc": "OR-BNPN-JC-01", "jpid": "IWAK", "type": "JP", "pin": "7
 const pinIndex = {};
 PIN_MAP.forEach(r => { pinIndex[r.pin] = r; });
 
-const pinInput = document.getElementById('pincode');
+const mobileInput = document.getElementById('mobile');
+const mobileHint = document.getElementById('mobileHint');
+let duplicateCheckTimer = null;
+
+mobileInput.addEventListener('input', () => {
+  const val = mobileInput.value.trim();
+  mobileHint.textContent = '';
+  mobileHint.style.color = '#777';
+
+  clearTimeout(duplicateCheckTimer);
+  if (val.length !== 10) return;
+
+  // debounce so we don't fire a request on every keystroke
+  duplicateCheckTimer = setTimeout(() => checkDuplicateMobile(val), 400);
+});
+
+async function checkDuplicateMobile(mobile) {
+  if (!SCRIPT_URL || SCRIPT_URL.indexOf('PASTE_YOUR') !== -1) return;
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=checkMobile&mobile=' + encodeURIComponent(mobile));
+    const data = await resp.json();
+    if (data.exists) {
+      mobileHint.textContent = 'Lead already recorded for this number (Lead ID: ' + data.leadId + ', Status: ' + data.status + ')';
+      mobileHint.style.color = '#e63946';
+      alert('Lead already recorded earlier for this mobile number.\nLead ID: ' + data.leadId + '\nCurrent Status: ' + data.status);
+    }
+  } catch (err) {
+    // silently ignore - don't block form on check failure
+  }
+}
 const assignedBox = document.getElementById('assignedBox');
 const assignedJP = document.getElementById('assignedJP');
 const assignedJC = document.getElementById('assignedJC');
