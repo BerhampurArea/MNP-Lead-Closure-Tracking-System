@@ -37,9 +37,9 @@
   <div class="form-body">
     <form id="statusForm">
       <div class="field">
-        <label>Lead ID <span class="req">*</span></label>
-        <input type="text" id="leadId" required placeholder="e.g. L0012">
-        <div class="hint">Lead ID was generated when the JCA submitted the lead</div>
+        <label>Customer Mobile Number <span class="req">*</span></label>
+        <input type="tel" id="mobile" required maxlength="10" pattern="[6-9][0-9]{9}" placeholder="10-digit mobile number">
+        <div class="hint">Same number the JCA entered while generating the lead</div>
       </div>
 
       <div class="field">
@@ -97,7 +97,7 @@ document.getElementById('statusForm').addEventListener('submit', async function(
 
   const payload = {
     type: "status_update",
-    leadId: document.getElementById('leadId').value.trim(),
+    mobile: document.getElementById('mobile').value.trim(),
     closingPrmId: document.getElementById('closingPrmId').value.trim(),
     mnpStatus: mnpStatus.value,
     ornNo: ornNo.value.trim(),
@@ -117,7 +117,7 @@ document.getElementById('statusForm').addEventListener('submit', async function(
       body: JSON.stringify(payload)
     });
     statusMsg.className = 'status-msg success';
-    statusMsg.textContent = 'Status updated successfully for ' + payload.leadId + '.';
+    statusMsg.textContent = 'Status updated successfully for ' + payload.mobile + '.';
     document.getElementById('statusForm').reset();
     ornField.classList.remove('show');
   } catch (err) {
